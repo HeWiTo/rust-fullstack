@@ -1,6 +1,15 @@
-use actix_web::{get, HttpResponse};
+use actix_web::{
+    web::{
+        self,
+        ServiceConfig
+    },
+    HttpResponse
+};
 
-#[get("/health")]
+pub fn service(cfg: &mut ServiceConfig) {
+    cfg.route("/health", web::get().to(health));
+}
+
 async fn health() -> HttpResponse {
     tracing::info!("Health check");
     HttpResponse::Ok()

@@ -17,8 +17,10 @@ sqlx = { version = "0.7", default-features = false, features = [
   "chrono",
   "json",
 ] }
-#tracing
+# tracing
 tracing = "0.1"
+# shared
+shared = { path = "../../shared" }
 
 [dev-dependencies]
 actix-rt = "2.0.0"

@@ -2,12 +2,10 @@ use actix_web::web::{self, ServiceConfig};
 use shuttle_actix_web::ShuttleActixWeb;
 use shuttle_runtime::CustomError;
 use sqlx::Executor;
-use std::path::PathBuf;
 
 #[shuttle_runtime::main]
 async fn actix_web(
     #[shuttle_shared_db::Postgres] pool: sqlx::PgPool,
-    #[shuttle_static_folder::StaticFolder(folder = "static")] static_folder: PathBuf,
 ) -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send + Clone + 'static> {
     pool.execute(include_str!("../../db/schema.sql"))
         .await
@@ -25,7 +23,7 @@ async fn actix_web(
                     api_lib::films::service::<api_lib::film_repository::PostgresFilmRepository>,
                 ),
         )
-        .service(actix_files::Files::new("/", static_folder)
+        .service(actix_files::Files::new("/", "static".to_string())
             .show_files_listing()
             .index_file("index.html"),
         );

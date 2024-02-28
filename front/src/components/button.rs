@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
-use crate::models::ButtonType;
+use crate::models::button::ButtonType;
 
-#[inline_props]
+#[component]
 pub fn Button<'a>(
     cx: Scope<'a>,
     button_type: ButtonType,

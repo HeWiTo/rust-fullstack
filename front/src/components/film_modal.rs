@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
 
 use crate::components::Button;
-use crate::models::{ButtonType};
+use crate::models::{
+    button::ButtonType,
+    film::FilmModalVisibility,
+};
 
 #[derive(Props)]
 pub struct FilmModalProps<'a> {
@@ -9,7 +12,14 @@ pub struct FilmModalProps<'a> {
     on_cancel: EventHandler<'a, MouseEvent>,
 }
 
+#[allow(non_snake_case)]
 pub fn FilmModal<'a>(cx: Scope<'a, FilmModalProps>) -> Element<'a> {
+    let is_modal_visible = use_shared_state::<FilmModalVisibility>(cx).unwrap();
+
+    if !is_modal_visible.read().0 {
+        return None;
+    }
+
     cx.render(rsx!(
         article {
             class: "z-50 w-full h-full fixed top-0 right-0 bg-gray-800 bg-opacity-50 flex flex-col justify-center items-center",
@@ -92,5 +102,5 @@ pub fn FilmModal<'a>(cx: Scope<'a, FilmModalProps>) -> Element<'a> {
                 }
             }
         }
-    ))
+    ))    
 }

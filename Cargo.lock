@@ -1233,6 +1233,7 @@ dependencies = [
  "dioxus-web",
  "log",
  "shared",
+ "uuid",
  "wasm-logger",
 ]
 

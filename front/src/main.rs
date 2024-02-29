@@ -40,7 +40,7 @@ fn App(cx: Scope) -> Element {
     use_shared_state_provider(cx, || FilmModalVisibility(false));
     let is_modal_visible = use_shared_state::<FilmModalVisibility>(cx).unwrap();
     let films = use_state::<Option<Vec<Film>>>(cx, || None);
-    let selected_film = use_state::<Option<Vec<Film>>>(cx, || None);
+    let selected_film = use_state::<Option<Film>>(cx, || None);
     let force_get_films = use_state(cx, || ());
 
     {
@@ -55,6 +55,62 @@ fn App(cx: Scope) -> Element {
             }
         });
     }
+
+    let delete_film = move |filmId: String| {
+        let force_get_films = force_get_films.clone();
+        cx.spawn({
+            async move {
+                let response = reqwest::Client::new()
+                    .delete(&format!("{}/{}", &films_endpoint(), filmId))
+                    .send()
+                    .await;
+                match response {
+                    Ok(_data) => {
+                        log::info!("Film deleted");
+                        force_get_films.set(());
+                    }
+                    Err(err) => {
+                        log::error!("Error deleting film: {:?}", err);
+                    }
+                }
+            }
+        });
+    };
+
+    let create_or_update_film = move |film: Film| {
+        let force_get_films = force_get_films.clone();
+        let current_selected_film = selected_film.clone();
+        let is_modal_visible = is_modal_visible.clone();
+
+        cx.spawn({
+            async move {
+                let response = if current_selected_film.get().is_some() {
+                    reqwest::Client::new()
+                        .put(&films_endpoint())
+                        .json(&film)
+                        .send()
+                        .await
+                } else {
+                    reqwest::Client::new()
+                        .post(&films_endpoint())
+                        .json(&film)
+                        .send()
+                        .await
+                };
+                match response {
+                    Ok(_data) => {
+                        log::info!("Film created");
+                        current_selected_film.set(None);
+                        is_modal_visible.write().0 = false;
+                        force_get_films.set(());
+                    }
+                    Err(err) => {
+                        log::error!("Error creating film: {:?}", err);
+                    }
+                }
+            } 
+        });
+    };
 
     cx.render(rsx! {
         main {
@@ -72,10 +128,12 @@ fn App(cx: Scope) -> Element {
                                         key: "{film.id}",
                                         film: film,
                                         on_edit: move |_| {
-                                            selected_film.get().clone();
+                                            selected_film.set(Some(film.clone()));
                                             is_modal_visible.write().0 = true
                                         },
-                                        on_delete: move |_| {}
+                                        on_delete: move |_| {
+                                            delete_film(film.id.to_string());
+                                        }
                                     }
                                 )
                             })}
@@ -86,8 +144,10 @@ fn App(cx: Scope) -> Element {
             Footer{}
         }
         FilmModal {
-            film: Option::<Film>::clone(&Option::None),
-            on_create_or_update: move |_| {},
+            film: selected_film.get().clone(),
+            on_create_or_update: move |new_film| {
+                create_or_update_film(new_film);
+            },
             on_cancel: move |_| {
                 selected_film.set(None);
                 is_modal_visible.write().0 = false;

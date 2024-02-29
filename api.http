@@ -1,6 +1,6 @@
 # @host = https://rust-fullstack-henri.shuttleapp.rs
-@host = http://localhost:8000/api
-@film_id = 606c11be-190a-11ee-9bfc-0242ac110002
+@host = http://localhost:8010/api
+@film_id = 1f902df8-d6ae-11ee-a0b7-0242ac110002
 
 ### health
 GET {{host}}/health HTTP/1.1
